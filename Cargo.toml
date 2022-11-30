@@ -8,13 +8,13 @@ edition = "2021"
 
 [dependencies]
 queues = "1.1.0"
-reqwest = { version = "0.11.6", features = ["json"]}
+reqwest = { version = "0.11.13", features = ["json"]}
 tokio = { version = "1", features = ["full"] }
-clap = "2.33.3"
+clap = { version = "4.0.29", features = ["derive"]}
 chrono = "0.4"
 dotenv = "0.15.0"
-itertools = "0.10.1"
-ndarray = "0.15.4"
-regex = "1.5.4"
+itertools = "0.10.5"
+ndarray = "0.15.6"
+regex = "1.7.0"
 lazy_static = "1.4.0"
-pathfinding = "0.1.10"
+pathfinding = "3.0.14"

@@ -26,7 +26,7 @@ pub trait Solver {
     fn solve_first(&self, input: &Self::Input) -> Result<Self::Output1, String>;
     fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String>;
 
-    fn solve(&self, filename: String, parts: isize) {
+    fn solve(&self, filename: String, parts: usize) {
         let file = File::open(filename).expect("input file not found");
         let input = self.read_input(BufReader::new(&file));
         if parts & 0x1 > 0 {
@@ -44,7 +44,7 @@ fn get_elapsed(start: Instant) -> String {
     let elapsed = start.elapsed();
 
     let nanos = elapsed.as_nanos();
-    let decimals = format!("{}", nanos).len();
+    let decimals = format!("{nanos}").len();
     match decimals {
         0..=4 => format!("{} ns", elapsed.as_nanos()),
         5..=7 => format!("{} μs", elapsed.as_micros()),
