@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use super::Solver;
 use std::collections::HashSet;
 use std::fs::File;

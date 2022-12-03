@@ -1,7 +1,5 @@
-use itertools::Itertools;
-use lazy_static::__Deref;
-
 use super::Solver;
+use itertools::Itertools;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -15,7 +13,7 @@ enum RPS {
     Scissors,
 }
 
-fn getResult(op: RPS, pl: RPS) -> usize {
+fn get_result(op: RPS, pl: RPS) -> usize {
     match (op, pl) {
         (RPS::Rock, RPS::Paper) => 6,
         (RPS::Rock, RPS::Scissors) => 0,
@@ -26,16 +24,16 @@ fn getResult(op: RPS, pl: RPS) -> usize {
         _ => 3,
     }
 }
-fn getPlayScore(rps: RPS) -> usize {
+fn get_play_score(rps: RPS) -> usize {
     match rps {
         RPS::Rock => 1,
         RPS::Paper => 2,
         RPS::Scissors => 3,
     }
 }
-fn getResultMatch(rps: Vec<(RPS, RPS)>) -> usize {
+fn get_result_match(rps: Vec<(RPS, RPS)>) -> usize {
     rps.into_iter()
-        .map(|(op, pl)| getResult(op, pl) + getPlayScore(pl))
+        .map(|(op, pl)| get_result(op, pl) + get_play_score(pl))
         .sum()
 }
 
@@ -56,16 +54,16 @@ impl Solver for Problem {
     }
 
     fn solve_first(&self, input: &Self::Input) -> Result<Self::Output1, String> {
-        let opponentRPS =
+        let opponent_rps =
             HashMap::from([('A', RPS::Rock), ('B', RPS::Paper), ('C', RPS::Scissors)]);
-        let playerRPS = HashMap::from([('X', RPS::Rock), ('Y', RPS::Paper), ('Z', RPS::Scissors)]);
+        let player_rps = HashMap::from([('X', RPS::Rock), ('Y', RPS::Paper), ('Z', RPS::Scissors)]);
 
         let rps: Vec<(RPS, RPS)> = input
             .into_iter()
             .map(|(op, pl)| {
                 (
-                    opponentRPS.get(op).unwrap().to_owned(),
-                    playerRPS.get(pl).unwrap().to_owned(),
+                    opponent_rps.get(op).unwrap().to_owned(),
+                    player_rps.get(pl).unwrap().to_owned(),
                 )
             })
             .collect();
@@ -76,32 +74,32 @@ impl Solver for Problem {
         //     .collect();
         // println!("{:?}", res);
 
-        Ok(getResultMatch(rps))
+        Ok(get_result_match(rps))
     }
 
     fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String> {
-        let opponentRPS =
+        let opponent_rps =
             HashMap::from([('A', RPS::Rock), ('B', RPS::Paper), ('C', RPS::Scissors)]);
 
         let rps = input
             .into_iter()
             .map(|(op, res)| {
-                let opRPS = opponentRPS.get(op).unwrap().to_owned();
+                let op_rps = opponent_rps.get(op).unwrap().to_owned();
 
-                let plRPS = match (opRPS, res) {
+                let pl_rps = match (op_rps, res) {
                     (RPS::Rock, 'X') => RPS::Scissors,
                     (RPS::Rock, 'Z') => RPS::Paper,
                     (RPS::Paper, 'X') => RPS::Rock,
                     (RPS::Paper, 'Z') => RPS::Scissors,
                     (RPS::Scissors, 'X') => RPS::Paper,
                     (RPS::Scissors, 'Z') => RPS::Rock,
-                    _ => opRPS,
+                    _ => op_rps,
                 };
 
-                (opRPS, plRPS)
+                (op_rps, pl_rps)
             })
             .collect_vec();
 
-        Ok(getResultMatch(rps))
+        Ok(get_result_match(rps))
     }
 }
