@@ -34,9 +34,7 @@ impl Solver for Problem {
             .iter()
             .enumerate()
             .skip(4)
-            .map(|(i, _)| has_duplicates(&input_clone[(i - 4)..i]))
-            .tuple_windows::<(_, _, _, _)>()
-            .find_position(|(a, b, c, d)| [a, b, c, d].iter().all(|x| !*x));
+            .find_position(|(i, _)| !has_duplicates(&input_clone[(i - 4)..*i]));
 
         match res {
             None => Err("Not found".to_owned()),
@@ -51,9 +49,7 @@ impl Solver for Problem {
             .iter()
             .enumerate()
             .skip(14)
-            .map(|(i, _)| has_duplicates(&input_clone[(i - 14)..i]))
-            .tuple_windows::<(_, _, _, _)>()
-            .find_position(|(a, b, c, d)| [a, b, c, d].iter().all(|x| !*x));
+            .find_position(|(i, _)| !has_duplicates(&input_clone[(i - 14)..*i]));
 
         match res {
             None => Err("Not found".to_owned()),
