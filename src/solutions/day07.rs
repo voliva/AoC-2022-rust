@@ -2,7 +2,6 @@ use itertools::Itertools;
 use slab_tree::{NodeId, Tree, TreeBuilder};
 
 use super::Solver;
-use std::cell::RefCell;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::num::ParseIntError;
