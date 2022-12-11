@@ -69,7 +69,8 @@ impl Solver for Problem {
     }
 
     fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String> {
-        let mut display = vec![" "; 6 * 40];
+        let width = 50;
+        let mut display = vec![" "; 6 * width];
 
         let mut x: isize = 1;
         let mut crt_pointer: usize = 0;
@@ -81,7 +82,18 @@ impl Solver for Problem {
             };
 
             for _ in 0..op_len {
-                if ((crt_pointer % 40) as isize - x).abs() <= 1 {
+                // let mut mod_diff = (crt_pointer as isize - x) % width as isize;
+                // mod_diff = if mod_diff < 0 {
+                //     mod_diff + width as isize
+                // } else {
+                //     mod_diff
+                // };
+
+                // if mod_diff <= 1 {
+                //     display[crt_pointer] = "#";
+                // }
+
+                if ((crt_pointer % width) as isize - x).abs() <= 1 {
                     display[crt_pointer] = "#";
                 }
 
@@ -92,14 +104,14 @@ impl Solver for Problem {
                 x += add;
             }
 
-            if crt_pointer >= 6 * 40 {
+            if crt_pointer >= 6 * width {
                 break;
             }
         }
 
         for y in 0..6 {
-            for x in 0..40 {
-                print!("{} ", display[y * 40 + x]);
+            for x in 0..width {
+                print!("{} ", display[y * width + x]);
             }
             println!("");
         }
