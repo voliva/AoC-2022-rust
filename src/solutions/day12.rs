@@ -79,36 +79,38 @@ impl Solver for Problem {
     fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String> {
         let shape = input.maze.shape();
 
-        let res = input
+        let starts = input
             .maze
             .indexed_iter()
             .filter(|(_, v)| **v == 0)
-            .map(|(x, _)| x)
-            .filter_map(|start| {
-                let path = dijkstra(
-                    &start,
-                    |actual| {
-                        let res = adjacent(shape, actual)
-                            .filter(|(r, c)| {
-                                let current = input.maze[[actual.0, actual.1]];
-                                let v = input.maze[[*r, *c]];
-                                return v <= current + 1;
-                            })
-                            .map(|p| (p, 1))
-                            .collect_vec();
-                        res
-                    },
-                    |p| *p == input.end,
-                );
+            .map(|(x, _)| (x, 1))
+            .collect_vec();
 
-                match path {
-                    Some((path, _)) => Some(path.len() - 1),
-                    None => None,
+        let nil = (usize::MAX, usize::MAX);
+
+        let path = dijkstra(
+            &nil,
+            |actual| {
+                if actual == &nil {
+                    starts.clone()
+                } else {
+                    adjacent(shape, actual)
+                        .filter(|(r, c)| {
+                            let current = input.maze[[actual.0, actual.1]];
+                            let v = input.maze[[*r, *c]];
+                            return v <= current + 1;
+                        })
+                        .map(|p| (p, 1))
+                        .collect_vec()
                 }
-            })
-            .min();
+            },
+            |p| *p == input.end,
+        );
 
-        Ok(res.unwrap())
+        match path {
+            Some((path, _)) => Ok(path.len() - 2),
+            None => Err("path not found".to_string()),
+        }
     }
 }
 
