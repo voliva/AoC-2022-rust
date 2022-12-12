@@ -1,5 +1,6 @@
-noop
 addx 1
+addx 2
+noop
 addx 3
 addx 2
 noop
@@ -7,37 +8,37 @@ addx 2
 noop
 addx 3
 addx 3
-addx 9
-addx 15
 addx 12
-addx -29
+addx 17
+addx 12
+addx -34
 noop
 addx 3
 addx 2
 noop
 addx 3
 addx 3
-addx 13
+addx 17
 noop
-addx -8
+addx -12
 addx 2
-addx 14
-addx -10
+addx 17
+addx -13
 addx 1
-addx 8
-addx -54
+addx -34
+addx -12
+addx 11
+noop
+addx -6
 addx 13
 noop
-addx -8
+addx -7
+noop
+addx 2
+addx 2
+addx 2
 addx 16
-noop
-addx -10
-noop
-addx 2
-addx 2
-addx 2
-addx 14
-addx 14
+addx 12
 addx -21
 noop
 addx 2
@@ -48,15 +49,15 @@ addx 2
 addx 2
 noop
 addx 3
-addx 15
+addx 9
 noop
-addx -10
-addx 10
+addx -4
+addx 8
 addx 16
-addx 11
-addx -128
-addx 15
-addx 39
+addx -40
+addx -25
+addx 13
+addx -9
 addx 1
 noop
 addx 4
@@ -65,9 +66,9 @@ addx 2
 addx 2
 noop
 addx 3
-addx 15
+addx 8
 noop
-addx -9
+addx -2
 noop
 addx 2
 addx 2
@@ -78,13 +79,13 @@ noop
 addx 3
 addx 3
 addx 1
-addx 10
-addx -5
-addx 15
-addx 14
-addx -33
+addx 8
+addx -3
+addx 13
+addx -34
+addx 13
 noop
-addx -38
+addx -34
 addx 2
 addx 14
 noop
@@ -106,65 +107,64 @@ addx 2
 noop
 addx 3
 addx 2
-addx 10
-addx 14
+addx 17
 addx 16
-addx -32
-addx 11
-addx -36
-noop
-addx -18
-addx 2
 addx 16
-noop
-addx -11
-addx 3
-noop
-addx 2
-addx 2
-addx 14
-addx 11
-addx -19
-addx 3
-noop
-addx 2
-noop
-addx 3
-addx 2
-addx 2
-noop
-addx 3
-addx 10
-addx 14
+addx -41
+addx -41
 addx 8
-addx -24
-addx 16
-addx -111
-addx 51
 noop
-addx 4
+addx -10
 addx 2
+addx 10
+noop
+addx -5
+addx 3
 noop
 addx 2
-noop
-addx 3
-addx 3
-addx 12
-addx 12
-addx 11
-addx -28
-noop
-addx 3
-noop
-addx 4
-addx 15
-addx -11
+addx 2
 addx 14
+addx 10
+addx -18
+addx 3
 noop
+addx 2
+noop
+addx 3
+addx 2
+addx 2
+noop
+addx 3
+addx 12
+addx 8
+addx 13
+addx -25
+addx -33
+addx -12
+addx 1
+noop
+addx 4
+addx 2
+noop
+addx 2
+noop
+addx 3
+addx 3
+addx 9
+addx 12
+addx 15
+addx -29
+noop
+addx 3
+noop
+addx 4
+addx 13
 addx -9
+addx 17
+noop
+addx -12
 addx 2
 noop
 addx 3
 addx 1
-addx 9
 addx 13
