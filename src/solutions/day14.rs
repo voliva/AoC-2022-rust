@@ -50,13 +50,13 @@ fn put_rocks(
     if from.0 == to.0 {
         let min = from.1.min(to.1);
         let max = from.1.max(to.1);
-        let x = from.0 - x_offset;
+        let x = from.0 + x_offset;
         for y in min..(max + 1) {
             dest[[y, x]] = CaveElement::Rock
         }
     } else if from.1 == to.1 {
-        let min = from.0.min(to.0) - x_offset;
-        let max = from.0.max(to.0) - x_offset;
+        let min = from.0.min(to.0) + x_offset;
+        let max = from.0.max(to.0) + x_offset;
         let y = from.1;
         for x in min..(max + 1) {
             dest[[y, x]] = CaveElement::Rock
@@ -82,14 +82,17 @@ fn array_from_path(rocks: &Vec<RockPath>) -> (Array2<CaveElement>, usize) {
         .map(|r| r.path.iter().map(|(x, _)| x).max().unwrap())
         .max()
         .unwrap();
-    let start_point = 500 - min_x;
+    let extra_x = 500;
+    let start_point = 500 - min_x + extra_x;
 
-    let mut res: Array2<CaveElement> =
-        Array2::from_elem((max_y + 1, max_x - min_x + 1), CaveElement::Air);
+    let mut res: Array2<CaveElement> = Array2::from_elem(
+        (max_y + 1 + 2, max_x - min_x + extra_x * 2),
+        CaveElement::Air,
+    );
 
     for r in rocks {
         for (from, to) in (0..r.path.len()).tuple_windows() {
-            put_rocks(&mut res, r.path[from], r.path[to], *min_x);
+            put_rocks(&mut res, r.path[from], r.path[to], extra_x - min_x);
         }
     }
 
@@ -100,21 +103,19 @@ fn put_sand(dest: &mut Array2<CaveElement>, start: usize) -> bool {
     let shape = dest.shape().to_owned();
     let mut x = start;
     let mut y = 0;
+    if dest[[y, x]] != CaveElement::Air {
+        return false;
+    }
 
-    while y < shape[0] - 1 && x < shape[1] {
+    while y < shape[0] - 2 {
         match dest[[y + 1, x]] {
             CaveElement::Air => {
                 y += 1;
             }
             _ => {
-                if x == 0 {
-                    return false;
-                }
                 if dest[[y + 1, x - 1]] == CaveElement::Air {
                     y += 1;
                     x -= 1;
-                } else if x == shape[1] - 1 {
-                    return false;
                 } else if dest[[y + 1, x + 1]] == CaveElement::Air {
                     y += 1;
                     x += 1;
@@ -125,8 +126,9 @@ fn put_sand(dest: &mut Array2<CaveElement>, start: usize) -> bool {
             }
         }
     }
+    dest[[y, x]] = CaveElement::Sand;
 
-    return false;
+    return true;
 }
 
 impl Solver for Problem {
@@ -151,6 +153,7 @@ impl Solver for Problem {
             units += 1;
         }
 
+        // 22807
         Ok(units)
     }
 
