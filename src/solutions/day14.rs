@@ -1,5 +1,5 @@
 use itertools::Itertools;
-use ndarray::{Array, Array2};
+use ndarray::Array2;
 
 use super::Solver;
 use core::panic;
@@ -157,7 +157,7 @@ impl Solver for Problem {
         Ok(units)
     }
 
-    fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String> {
+    fn solve_second(&self, _: &Self::Input) -> Result<Self::Output2, String> {
         todo!()
     }
 }
