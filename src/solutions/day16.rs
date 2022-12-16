@@ -41,7 +41,6 @@ impl FromStr for Valve {
 
 #[derive(Debug)]
 pub struct ImportantValve {
-    name: String,
     rate: usize,
     edges: HashMap<String, usize>,
 }
@@ -73,7 +72,7 @@ fn reduce_nodes(nodes: &HashMap<String, Valve>) -> HashMap<String, ImportantValv
                 .map(|other| (other.name.clone(), res.get(&other.name).unwrap().1))
                 .collect();
 
-            (name.clone(), ImportantValve { name, rate, edges })
+            (name.clone(), ImportantValve { rate, edges })
         })
         .collect()
 }
@@ -116,6 +115,30 @@ impl Ord for Possibility {
     }
 }
 
+fn find_max(
+    nodes: &HashMap<String, ImportantValve>,
+    visited: &HashSet<String>,
+    position: String,
+    time_left: usize,
+) -> usize {
+    let node = nodes.get(&position).unwrap();
+    let mut new_visited = visited.clone();
+    new_visited.insert(position.clone());
+
+    node.edges
+        .iter()
+        .filter(|(_, distance)| *distance + 1 < time_left)
+        .filter(|(dest, _)| !visited.contains(*dest))
+        .map(|(x, distance)| {
+            let sub_time = time_left - distance - 1;
+            let other_node = nodes.get(x).unwrap();
+            let released = other_node.rate * sub_time;
+            return find_max(nodes, &new_visited, x.clone(), sub_time) + released;
+        })
+        .max()
+        .unwrap_or(0)
+}
+
 impl Solver for Problem {
     type Input = HashMap<String, Valve>;
     type Output1 = usize;
@@ -134,47 +157,114 @@ impl Solver for Problem {
     fn solve_first(&self, input: &Self::Input) -> Result<Self::Output1, String> {
         let important_nodes = reduce_nodes(&input);
 
-        let mut time = 0;
-        let mut released = 0;
-        let mut visited: HashSet<String> = HashSet::new();
-        let mut position = "AA".to_owned();
-
-        while time < 30 && visited.len() < important_nodes.len() - 1 {
-            println!("{:?}", position);
-            let node = input.get(&position).unwrap();
-            visited.insert(position.clone());
-            released += node.rate * (30 - time);
-
-            let distances = &important_nodes.get(&position).unwrap().edges;
-            let max = important_nodes
-                .keys()
-                .filter(|other| !visited.contains(other.clone()))
-                .map(|other| {
-                    let other_node = input.get(other).unwrap();
-
-                    let total_time = time + distances.get(other).unwrap() + 1;
-
-                    return Possibility {
-                        to: other.to_owned(),
-                        release: if total_time >= 30 {
-                            0
-                        } else {
-                            other_node.rate * (30 - total_time)
-                        },
-                    };
-                })
-                .max()
-                .unwrap();
-
-            time += distances.get(&max.to).unwrap() + 1;
-            position = max.to.clone();
-        }
-
-        // >395
-        Ok(released)
+        Ok(find_max(
+            &important_nodes,
+            &HashSet::new(),
+            "AA".to_owned(),
+            30,
+        ))
     }
 
     fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String> {
-        todo!()
+        let important_nodes = reduce_nodes(&input);
+
+        Ok(find_max_2(
+            &important_nodes,
+            &HashSet::new(),
+            "AA".to_owned(),
+            0,
+            "AA".to_owned(),
+            0,
+            26,
+        ))
+    }
+}
+
+fn find_max_2(
+    nodes: &HashMap<String, ImportantValve>,
+    visited: &HashSet<String>,
+    position_a: String,
+    timeout_a: usize,
+    position_b: String,
+    timeout_b: usize,
+    time_left: usize,
+) -> usize {
+    if timeout_a == 0 {
+        let node = nodes.get(&position_a).unwrap();
+        let all_edges = node
+            .edges
+            .iter()
+            .filter(|(_, distance)| *distance + 1 < time_left)
+            .filter(|(dest, _)| !visited.contains(*dest))
+            .collect_vec();
+
+        let take = if timeout_b == 0 {
+            (all_edges.len() + 1) / 2
+        } else {
+            all_edges.len()
+        };
+
+        all_edges
+            .into_iter()
+            .take(take)
+            .map(|(x, distance)| {
+                if time_left == 26 {
+                    println!("{x} {take}");
+                }
+
+                let timeout_a = distance + 1;
+                let sub_time = time_left - timeout_a;
+                let other_node = nodes.get(x).unwrap();
+                let released = other_node.rate * sub_time;
+
+                let next_step = timeout_a.min(timeout_b);
+
+                let mut new_visited = visited.clone();
+                new_visited.insert(x.clone());
+
+                return find_max_2(
+                    nodes,
+                    &new_visited,
+                    x.clone(),
+                    timeout_a - next_step,
+                    position_b.clone(),
+                    timeout_b - next_step,
+                    time_left - next_step,
+                ) + released;
+            })
+            .max()
+            .unwrap_or(0)
+    } else if timeout_b == 0 {
+        let node = nodes.get(&position_b).unwrap();
+
+        node.edges
+            .iter()
+            .filter(|(_, distance)| *distance + 1 < time_left)
+            .filter(|(dest, _)| !visited.contains(*dest))
+            .map(|(x, distance)| {
+                let timeout_b = distance + 1;
+                let sub_time = time_left - timeout_b;
+                let other_node = nodes.get(x).unwrap();
+                let released = other_node.rate * sub_time;
+
+                let mut new_visited = visited.clone();
+                new_visited.insert(x.clone());
+
+                let next_step = timeout_a.min(timeout_b);
+
+                return find_max_2(
+                    nodes,
+                    &new_visited,
+                    position_a.clone(),
+                    timeout_a - next_step,
+                    x.clone(),
+                    timeout_b - next_step,
+                    time_left - next_step,
+                ) + released;
+            })
+            .max()
+            .unwrap_or(0)
+    } else {
+        panic!("No timeout = 0?")
     }
 }
