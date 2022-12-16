@@ -97,7 +97,7 @@ fn reduce_nodes(nodes: &HashMap<String, Valve>) -> HashMap<String, ImportantValv
 //     }
 // }
 
-#[derive(Ord, Eq, Debug)]
+#[derive(Debug, PartialOrd)]
 struct Possibility {
     to: String,
     release: usize,
@@ -108,10 +108,11 @@ impl PartialEq for Possibility {
         return self.release.eq(&other.release);
     }
 }
+impl Eq for Possibility {}
 
-impl PartialOrd for Possibility {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        return self.release.partial_cmp(&other.release);
+impl Ord for Possibility {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        return self.release.cmp(&other.release);
     }
 }
 
@@ -138,13 +139,14 @@ impl Solver for Problem {
         let mut visited: HashSet<String> = HashSet::new();
         let mut position = "AA".to_owned();
 
-        while time < 30 {
+        while time < 30 && visited.len() < important_nodes.len() - 1 {
+            println!("{:?}", position);
             let node = input.get(&position).unwrap();
             visited.insert(position.clone());
             released += node.rate * (30 - time);
 
             let distances = &important_nodes.get(&position).unwrap().edges;
-            let possibilities = important_nodes
+            let max = important_nodes
                 .keys()
                 .filter(|other| !visited.contains(other.clone()))
                 .map(|other| {
@@ -161,9 +163,8 @@ impl Solver for Problem {
                         },
                     };
                 })
-                .collect_vec();
-            let max = possibilities.iter().min().unwrap();
-            println!("{:?}, {:?}", possibilities, max);
+                .max()
+                .unwrap();
 
             time += distances.get(&max.to).unwrap() + 1;
             position = max.to.clone();
