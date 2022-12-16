@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use pathfinding::prelude::dijkstra_all;
 use regex::Regex;
 
 use super::Solver;
@@ -38,20 +39,79 @@ impl FromStr for Valve {
     }
 }
 
-#[derive(Clone)]
-struct SearchState {
-    position: String,
-    opened: HashSet<String>,
+#[derive(Debug)]
+pub struct ImportantValve {
+    name: String,
+    rate: usize,
+    edges: HashMap<String, usize>,
+}
+
+fn reduce_nodes(nodes: &HashMap<String, Valve>) -> HashMap<String, ImportantValve> {
+    let important_nodes = nodes
+        .values()
+        .filter(|x| x.rate > 0 || x.name == "AA")
+        .collect_vec();
+
+    important_nodes
+        .iter()
+        .map(|origin| {
+            let name = origin.name.clone();
+            let rate = origin.rate;
+
+            let res = dijkstra_all(&name, |p| {
+                nodes
+                    .get(p)
+                    .unwrap()
+                    .edges
+                    .iter()
+                    .map(|e| (e.to_owned(), 1))
+            });
+
+            let edges: HashMap<String, usize> = important_nodes
+                .iter()
+                .filter(|other| other.name != name)
+                .map(|other| (other.name.clone(), res.get(&other.name).unwrap().1))
+                .collect();
+
+            (name.clone(), ImportantValve { name, rate, edges })
+        })
+        .collect()
+}
+
+// #[derive(Clone, PartialEq, Eq, Hash)]
+// struct SearchState {
+//     position: String,
+//     visited: HashSet<String>,
+//     release: usize,
+//     time: usize,
+// }
+
+// impl SearchState {
+//     fn new(position: &str) -> Self {
+//         Self {
+//             position: position.to_owned(),
+//             visited: HashSet::new(),
+//             release: 0,
+//             time: 0,
+//         }
+//     }
+// }
+
+#[derive(Ord, Eq, Debug)]
+struct Possibility {
+    to: String,
     release: usize,
 }
 
-impl SearchState {
-    fn new(position: &str) -> Self {
-        Self {
-            position: position.to_owned(),
-            opened: HashSet::new(),
-            release: 0,
-        }
+impl PartialEq for Possibility {
+    fn eq(&self, other: &Self) -> bool {
+        return self.release.eq(&other.release);
+    }
+}
+
+impl PartialOrd for Possibility {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        return self.release.partial_cmp(&other.release);
     }
 }
 
@@ -71,38 +131,46 @@ impl Solver for Problem {
     }
 
     fn solve_first(&self, input: &Self::Input) -> Result<Self::Output1, String> {
-        let mut states: Vec<SearchState> = vec![SearchState::new("AA")];
+        let important_nodes = reduce_nodes(&input);
 
-        for m in 1..31 {
-            println!("{m}");
-            let mut new_states: Vec<SearchState> = vec![];
+        let mut time = 0;
+        let mut released = 0;
+        let mut visited: HashSet<String> = HashSet::new();
+        let mut position = "AA".to_owned();
 
-            for s in states {
-                let current_node = input.get(&s.position).unwrap();
+        while time < 30 {
+            let node = input.get(&position).unwrap();
+            visited.insert(position.clone());
+            released += node.rate * (30 - time);
 
-                if s.opened.len() == input.len() {
-                    new_states.push(s);
-                    continue;
-                }
+            let distances = &important_nodes.get(&position).unwrap().edges;
+            let possibilities = important_nodes
+                .keys()
+                .filter(|other| !visited.contains(other.clone()))
+                .map(|other| {
+                    let other_node = input.get(other).unwrap();
 
-                if !s.opened.contains(&s.position) {
-                    let mut new_state = s.clone();
-                    new_state.opened.insert(s.position.clone());
-                    new_state.release += (30 - m) * current_node.rate;
-                    new_states.push(new_state);
-                }
+                    let total_time = time + distances.get(other).unwrap() + 1;
 
-                for e in &current_node.edges {
-                    let mut new_state = s.clone();
-                    new_state.position = e.clone();
-                    new_states.push(new_state);
-                }
-            }
+                    return Possibility {
+                        to: other.to_owned(),
+                        release: if total_time >= 30 {
+                            0
+                        } else {
+                            other_node.rate * (30 - total_time)
+                        },
+                    };
+                })
+                .collect_vec();
+            let max = possibilities.iter().min().unwrap();
+            println!("{:?}, {:?}", possibilities, max);
 
-            states = new_states;
+            time += distances.get(&max.to).unwrap() + 1;
+            position = max.to.clone();
         }
 
-        todo!()
+        // >395
+        Ok(released)
     }
 
     fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String> {
