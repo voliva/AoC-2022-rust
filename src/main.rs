@@ -4,6 +4,9 @@ use std::io::Read;
 
 mod solutions;
 
+#[macro_use]
+extern crate lazy_static;
+
 #[derive(Parser, Debug)]
 enum CLIArgs {
     Run(RunCommand),
