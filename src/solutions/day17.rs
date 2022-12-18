@@ -217,7 +217,7 @@ impl Field {
         }
     }
 
-    fn print(&self) {
+    fn _print(&self) {
         for line in self.lines.iter().rev() {
             let binary = format!("{line:0>7b}");
             let transformed = binary
