@@ -357,6 +357,7 @@ dependencies = [
  "regex",
  "reqwest",
  "slab_tree",
+ "slotmap",
  "tokio",
 ]
 
@@ -1092,6 +1093,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f9e8b45abe77b7cab703054a11973cffe164c82c5ff5e211ae5a73af5e42e39f"
 dependencies = [
  "snowflake",
+]
+
+[[package]]
+name = "slotmap"
+version = "1.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1e08e261d0e8f5c43123b7adf3e4ca1690d655377ac93a03b2c9d3e98de1342"
+dependencies = [
+ "version_check",
 ]
 
 [[package]]
