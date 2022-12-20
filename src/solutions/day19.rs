@@ -1,11 +1,11 @@
+use itertools::Itertools;
 use regex::Regex;
 
 use super::Solver;
-use std::cmp::Ordering;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::num::ParseIntError;
-use std::ops::{Add, Sub};
+use std::ops::{Add, Mul, Sub};
 use std::str::FromStr;
 
 pub struct Problem;
@@ -40,64 +40,107 @@ impl FromStr for Blueprint {
 }
 
 impl Blueprint {
-    fn get_quality(&self) -> usize {
-        self.id * self.get_max_geode()
+    fn get_quality(&self, time: usize) -> usize {
+        let geode = self.get_max_geode(time);
+        // println!("## {} {geode} ##", self.id);
+        self.id * geode
     }
 
-    fn get_max_geode(&self) -> usize {
+    fn get_max_geode(&self, time: usize) -> usize {
         let mut to_visit: Vec<Node> = vec![];
         to_visit.push(Node {
             robots: FourTuple(1, 0, 0, 0),
             resources: FourTuple(0, 0, 0, 0),
+            interests: (true, true, true, true),
         });
 
-        for i in 0..24 {
-            let max_robots = 5;
+        let max_costs = self
+            .ore
+            .max_cost(self.clay)
+            .max_cost(self.obsidian)
+            .max_cost(self.geode);
 
-            println!("{}: {i} {}", self.id, to_visit.len());
+        for _ in 0..time {
+            // println!("{}: {i} {}", self.id, to_visit.len());
             let mut new_to_visit: Vec<Node> = vec![];
             for node in to_visit.iter() {
-                if node.resources.can_buy(self.ore) && node.robots.0 < max_robots {
+                // println!("{:?}", node);
+
+                let mut new_interests = node.interests.clone();
+
+                let will_have = node.resources + node.robots * time;
+                let will_buy = (
+                    node.interests.0 && will_have.can_buy(self.ore) && node.robots.0 < max_costs.0,
+                    node.interests.1 && will_have.can_buy(self.clay) && node.robots.1 < max_costs.1,
+                    node.interests.2
+                        && will_have.can_buy(self.obsidian)
+                        && node.robots.2 < max_costs.2,
+                    node.interests.3 && will_have.can_buy(self.geode),
+                );
+
+                if node.resources.can_buy(self.ore) && will_buy.0 {
+                    new_interests.0 = false;
                     let new_robots = node.robots + FourTuple(1, 0, 0, 0);
                     new_to_visit.push(Node {
                         robots: new_robots,
-                        resources: node.resources + new_robots - self.ore,
+                        resources: node.resources + node.robots - self.ore,
+                        interests: (true, true, true, true),
                     })
                 }
-                if node.resources.can_buy(self.clay) && node.robots.1 < max_robots {
+                if node.resources.can_buy(self.clay) && will_buy.1 {
+                    new_interests.1 = false;
                     let new_robots = node.robots + FourTuple(0, 1, 0, 0);
                     new_to_visit.push(Node {
                         robots: new_robots,
-                        resources: node.resources + new_robots - self.clay,
+                        resources: node.resources + node.robots - self.clay,
+                        interests: (true, true, true, true),
                     })
                 }
-                if node.resources.can_buy(self.obsidian) && node.robots.2 < max_robots {
+                if node.resources.can_buy(self.obsidian) && will_buy.2 {
+                    new_interests.2 = false;
                     let new_robots = node.robots + FourTuple(0, 0, 1, 0);
                     new_to_visit.push(Node {
                         robots: new_robots,
-                        resources: node.resources + new_robots - self.obsidian,
+                        resources: node.resources + node.robots - self.obsidian,
+                        interests: (true, true, true, true),
                     })
                 }
-                if node.resources.can_buy(self.geode) && node.robots.3 < max_robots {
+                if node.resources.can_buy(self.geode) && will_buy.3 {
+                    new_interests.3 = false;
                     let new_robots = node.robots + FourTuple(0, 0, 0, 1);
                     new_to_visit.push(Node {
                         robots: new_robots,
-                        resources: node.resources + new_robots - self.geode,
+                        resources: node.resources + node.robots - self.geode,
+                        interests: (true, true, true, true),
                     })
                 }
+
+                // If this path won't buy more robots, then stop...
+                if !will_buy.0 && !will_buy.1 && !will_buy.2 && !will_buy.3 {
+                    continue;
+                }
+
                 new_to_visit.push(Node {
                     robots: node.robots,
                     resources: node.resources + node.robots,
+                    interests: new_interests,
                 })
             }
             to_visit = new_to_visit;
         }
 
-        to_visit.iter().map(|node| node.resources.3).max().unwrap()
+        // to_visit.iter().map(|node| node.resources.3).max().unwrap()
+        to_visit
+            .iter()
+            .sorted_by(|a, b| b.resources.3.cmp(&a.resources.3))
+            .take(1)
+            .map(|node| node.resources.3)
+            .max()
+            .unwrap()
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 struct FourTuple(usize, usize, usize, usize);
 
 impl Add for FourTuple {
@@ -122,16 +165,33 @@ impl Sub for FourTuple {
         )
     }
 }
+impl Mul<usize> for FourTuple {
+    type Output = Self;
+    fn mul(self, rhs: usize) -> Self::Output {
+        FourTuple(self.0 * rhs, self.1 * rhs, self.2 * rhs, self.3 * rhs)
+    }
+}
 
 impl FourTuple {
     fn can_buy(&self, other: FourTuple) -> bool {
         self.0 >= other.0 && self.1 >= other.1 && self.2 >= other.2 && self.3 >= other.3
     }
+
+    fn max_cost(&self, other: FourTuple) -> FourTuple {
+        FourTuple(
+            self.0.max(other.0),
+            self.1.max(other.1),
+            self.2.max(other.2),
+            self.3.max(other.3),
+        )
+    }
 }
 
+#[derive(Debug)]
 struct Node {
     robots: FourTuple,
     resources: FourTuple,
+    interests: (bool, bool, bool, bool),
 }
 
 impl Solver for Problem {
@@ -149,10 +209,18 @@ impl Solver for Problem {
     }
 
     fn solve_first(&self, input: &Self::Input) -> Result<Self::Output1, String> {
-        Ok(input.iter().map(|blueprint| blueprint.get_quality()).sum())
+        Ok(input
+            .iter()
+            .map(|blueprint| blueprint.get_quality(24))
+            .sum())
     }
 
     fn solve_second(&self, input: &Self::Input) -> Result<Self::Output2, String> {
-        todo!()
+        // <53940
+        Ok(input
+            .iter()
+            .take(3)
+            .map(|blueprint| blueprint.get_max_geode(32))
+            .product())
     }
 }
