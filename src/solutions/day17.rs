@@ -116,11 +116,9 @@ impl Solver for Problem {
         let mut shape_index = 0;
         let mut op_index = 0;
 
-        for _ in 0.. {
-            if shape_index > 0 && shape_index % SHAPES.len() == 0 && op_index % input.len() == 0 {
-                break;
-            }
-
+        let mut states = vec![];
+        let mut heights = vec![];
+        for i in 0.. {
             let mut shape = SHAPES[shape_index % SHAPES.len()].clone();
             shape_index += 1;
 
@@ -156,17 +154,50 @@ impl Solver for Problem {
                     }
                 }
             }
+
+            states.push(State::new(&field, shape_index % SHAPES.len()));
+            heights.push(field.lines.len());
+            if i > 0 && i % 2 == 0 {
+                if states[i] == states[i / 2] {
+                    let cycle_length = i / 2;
+                    let cycle_start = i / 2;
+                    let height_increase = heights[i] - heights[i / 2];
+
+                    let v: u64 = 1000000000000;
+                    let missing_steps = v - cycle_start as u64;
+                    let total_rounds = missing_steps / cycle_length as u64;
+                    let remaining_steps = (missing_steps % cycle_length as u64) as usize;
+
+                    let rounds_height =
+                        heights[i / 2] as u64 + total_rounds * height_increase as u64;
+                    let remaining_steps_height =
+                        heights[i / 2 + remaining_steps] - heights[i / 2] - 1;
+
+                    return Ok(rounds_height + remaining_steps_height as u64);
+                }
+            }
         }
+        unreachable!("")
+    }
+}
 
-        let every_round = field.lines.len();
-        let round_size = shape_index;
-        let v: u64 = 1000000000000;
-        let total_rounds = v / (round_size as u64);
-        let remaining_rounds = v % (round_size as u64);
+#[derive(PartialEq, Debug)]
+struct State {
+    lines: Vec<u8>,
+    next_shape: usize,
+}
 
-        println!("er: {every_round}, rs: {round_size}, tr: {total_rounds}, rr: {remaining_rounds}");
-
-        Ok(total_rounds)
+impl State {
+    fn new(field: &Field, next_shape: usize) -> Self {
+        let skip = if field.lines.len() < 10 {
+            0
+        } else {
+            field.lines.len() - 10
+        };
+        Self {
+            next_shape,
+            lines: field.lines.iter().skip(skip).map(|x| *x).collect(),
+        }
     }
 }
 
